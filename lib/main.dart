@@ -1,3 +1,4 @@
+import 'package:ares/features/luna_api/presentaion/luna_api_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
             themeMode:
                 settingsModel.isDarkTheme ? ThemeMode.dark : ThemeMode.light,
             onGenerateRoute: AppRouting.onGenerateRoute,
-            initialRoute: Routes.appsPage.name,
+            initialRoute: Routes.basePage.name,
           );
         },
       ),

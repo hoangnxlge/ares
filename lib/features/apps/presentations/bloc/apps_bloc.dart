@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:ares/features/apps/data/models/custom_device.dart';
 import 'package:bloc/bloc.dart';
-import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'apps_event.dart';
@@ -33,6 +32,21 @@ class AppsBloc extends Bloc<AppsEvent, AppsState> {
     on<_SelectDevice>(_onSelectDevice);
     on<_RemoveDevice>(_onRemoveDevice);
     on<_ActivateDevMode>(_onActivateDevMode);
+  }
+
+  Future<void> callLunaApi(
+    String endpoint, {
+    String? param,
+  }) async {
+    final process = await Process.start(
+      'ares-shell.cmd',
+      [
+        '-r',
+        'luna-send -n 1 -f $endpoint \'$param\'',
+      ],
+    );
+    await stdout.addStream(process.stdout);
+    process.kill();
   }
 
   FutureOr<void> _onAddDevice(_AddDevice event, Emitter<AppsState> emit) async {
@@ -126,19 +140,25 @@ class AppsBloc extends Bloc<AppsEvent, AppsState> {
 
   FutureOr<void> _onActivateDevMode(
       _ActivateDevMode event, Emitter<AppsState> emit) async {
-    emit(const _Loading());
-    final args = [
-      '-r',
-      "luna-send -n 1 luna://com.webos.service.devmode/setDevMode '{\"enabled\":true}'"
-    ];
-    final result = Process.runSync('Powershell.exe', ['pwd']);
-    debugPrint('AppLog: ${result.stderr}');
-    debugPrint('AppLog: ${result.stdout}');
-    if (![null, ''].contains(result.stderr)) {
-      emit(_Error(result.stderr));
-    } else {
-      emit(const _ActivateDevModeSuccess());
-    }
+// ares-shell -r "luna-send -n 1 luna://com.webos.settingsservice/getSystemSettings '{\`"keys\`":[\`"localeInfo\`"]}'"
+    await callLunaApi(
+      'luna://com.webos.settingsservice/getSystemSettings',
+      param: '{"keys": ["localeInfo"]}',
+    );
+
+    // emit(const _Loading());
+    // final args = [
+    //   '-r',
+    //   "luna-send -n 1 luna://com.webos.service.devmode/setDevMode '{\"enabled\":true}'"
+    // ];
+    // final result = Process.runSync('Powershell.exe', ['pwd']);
+    // debugPrint('AppLog: ${result.stderr}');
+    // debugPrint('AppLog: ${result.stdout}');
+    // if (![null, ''].contains(result.stderr)) {
+    //   emit(_Error(result.stderr));
+    // } else {
+    //   emit(const _ActivateDevModeSuccess());
+    // }
   }
 }
 

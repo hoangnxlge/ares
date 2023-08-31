@@ -30,7 +30,8 @@ class AppsPage extends StatefulWidget {
   State<AppsPage> createState() => _AppsPageState();
 }
 
-class _AppsPageState extends State<AppsPage> {
+class _AppsPageState extends State<AppsPage>
+    with AutomaticKeepAliveClientMixin {
   late final bloc = context.read<AppsBloc>();
   @override
   void initState() {
@@ -42,108 +43,116 @@ class _AppsPageState extends State<AppsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    bloc.add(const AppsEvent.activateDevMode());
-                  },
-                  child: const Text('Enable dev mode'),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  onPressed: () {
-                    bloc.add(const AppsEvent.getAppList());
-                  },
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Devices'),
-              trailing: IconButton(
+    super.build(context);
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          TextButton(
+            onPressed: () {
+              bloc.add(const AppsEvent.activateDevMode());
+            },
+            child: const Text('Get locale'),
+          ),
+          Row(
+            children: [
+              ElevatedButton(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AddDeviceDialog(
-                      onAddDevice: (device) {
-                        bloc.add(AppsEvent.addDevice(device));
-                      },
-                    ),
-                  );
+                  bloc.add(const AppsEvent.activateDevMode());
                 },
-                icon: const Icon(Icons.add),
+                child: const Text('Enable dev mode'),
               ),
-            ),
-            const SizedBox(height: 10),
-            BlocBuilder<AppsBloc, AppsState>(
-              buildWhen: (_, current) => current.maybeWhen(
-                getDeviceListSuccess: (_) => true,
-                orElse: () => false,
+              const SizedBox(width: 10),
+              IconButton(
+                onPressed: () {
+                  bloc.add(const AppsEvent.getAppList());
+                },
+                icon: const Icon(Icons.refresh),
               ),
-              builder: (context, state) {
-                return state.maybeWhen(
-                  getDeviceListSuccess: (devicies) => Wrap(
-                    children: devicies
-                        .map((device) => AppCard(
-                              '${device.name}\n${device.ipAddress}:${device.port}',
-                              onTap: () => bloc.add(
-                                AppsEvent.selectDevice(device.name),
-                              ),
-                              onRemove: () => bloc.add(
-                                AppsEvent.removeDevice(device.name),
-                              ),
-                              isSelected: device.isSelected,
-                              width: 150,
-                            ))
-                        .toList(),
+            ],
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Devices'),
+            trailing: IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AddDeviceDialog(
+                    onAddDevice: (device) {
+                      bloc.add(AppsEvent.addDevice(device));
+                    },
                   ),
-                  orElse: () => const SizedBox(),
                 );
               },
+              icon: const Icon(Icons.add),
             ),
-            const Divider(height: 40),
-            const ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text('Apps'),
+          ),
+          const SizedBox(height: 10),
+          BlocBuilder<AppsBloc, AppsState>(
+            buildWhen: (_, current) => current.maybeWhen(
+              getDeviceListSuccess: (_) => true,
+              orElse: () => false,
             ),
-            BlocBuilder<AppsBloc, AppsState>(
-              buildWhen: (_, current) => current.maybeWhen(
-                getAppListSuccess: (_) => true,
-                orElse: () => false,
-              ),
-              builder: (context, state) {
-                return state.maybeWhen(
-                  getAppListSuccess: (appList) => Wrap(
-                    children: appList
-                        .map(
-                          (appId) => AppCard(
-                            appId,
+            builder: (context, state) {
+              return state.maybeWhen(
+                getDeviceListSuccess: (devicies) => Wrap(
+                  children: devicies
+                      .map((device) => AppCard(
+                            '${device.name}\n${device.ipAddress}:${device.port}',
                             onTap: () => bloc.add(
-                              AppsEvent.launchApp(appId),
+                              AppsEvent.selectDevice(device.name),
                             ),
-                            onClose: () => bloc.add(
-                              AppsEvent.closeApp(appId),
+                            onRemove: () => bloc.add(
+                              AppsEvent.removeDevice(device.name),
                             ),
+                            isSelected: device.isSelected,
+                            width: 150,
+                          ))
+                      .toList(),
+                ),
+                orElse: () => const SizedBox(),
+              );
+            },
+          ),
+          const Divider(height: 40),
+          const ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('Apps'),
+          ),
+          BlocBuilder<AppsBloc, AppsState>(
+            buildWhen: (_, current) => current.maybeWhen(
+              getAppListSuccess: (_) => true,
+              orElse: () => false,
+            ),
+            builder: (context, state) {
+              return state.maybeWhen(
+                getAppListSuccess: (appList) => Wrap(
+                  children: appList
+                      .map(
+                        (appId) => AppCard(
+                          appId,
+                          onTap: () => bloc.add(
+                            AppsEvent.launchApp(appId),
                           ),
-                        )
-                        .toList(),
-                  ),
-                  orElse: () => const SizedBox(),
-                );
-              },
-            )
-          ],
-        ),
+                          onClose: () => bloc.add(
+                            AppsEvent.closeApp(appId),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                orElse: () => const SizedBox(),
+              );
+            },
+          )
+        ],
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class SliverSizeBox extends SliverToBoxAdapter {
